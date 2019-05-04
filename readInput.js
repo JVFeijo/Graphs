@@ -1,29 +1,44 @@
 const fs = require("fs");
-const rl = require("readline");
+const rlAsync = require("readline");
+const rl = require("readline-sync");
+const Graph = require("./graph");
 
-let graphMatrix;
-let graphList;
+let grafo;
+let graph;
 
-const readStdin = rl.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: false
-});
-
-function program() {
-  readStdin.question(
-    "Escolha o numero de vertices de seu grafo entre as opções:\n1. n = 3\n2. n = 7\n3. n = 10\n4. n = 100\n5. n = 200\n6. n = 500\n",
-    answer => {
-      let fileName = getFileName(answer);
-      if (fileName === "badOption") return program();
-      loadGraph(fileName);
-    }
-  );
+async function program() {
+  let continuar = await getGraph();
+  while (continuar) {
+    continuar = getOperation();
+  }
 }
 
-readStdin.on("line", line => {
-  if (line === "eof") readStdin.close();
-});
+async function getGraph() {
+  let answer = rl.question(
+    "Escolha o numero de vertices de seu grafo entre as opções:\n1. n = 3\n2. n = 7\n3. n = 10\n"
+  );
+  let fileName = getFileName(answer);
+  if (fileName === "badOption") {
+    console.log("Tente novamente por favor.");
+    return false;
+  } else {
+    loadGraph(fileName);
+    await sleep(100);
+    return true;
+  }
+}
+
+function getOperation() {
+  let answer = rl.question(
+    "Escolha uma das operações:\n1. Adicionar aresta\n2. Remover aresta\n3. Adicionar vertice\n4. Remover vertice\n5. Print\n6. pretty print\n7. Encerrar\n"
+  );
+  let result = operate(graph, answer);
+  if (result === "end") {
+    return false;
+  } else {
+    return true;
+  }
+}
 
 program();
 
@@ -34,19 +49,13 @@ function getFileName(option) {
       filename = "graph3";
       break;
     case "2":
-      filename = "graph3";
+      filename = "graph7";
       break;
     case "3":
-      filename = "graph3";
+      filename = "graph10";
       break;
     case "4":
-      filename = "graph3";
-      break;
-    case "5":
-      filename = "graph3";
-      break;
-    case "6":
-      filename = "graph3";
+      filename = "kill";
       break;
     default:
       filename = "badOption";
@@ -56,14 +65,13 @@ function getFileName(option) {
 }
 
 function loadGraph(fileName) {
-  const readline = rl.createInterface({
+  const readline = rlAsync.createInterface({
     input: fs.createReadStream(fileName),
     output: process.stdout,
     terminal: false
   });
 
   let input = [];
-  let grafo;
 
   readline.on("line", line => {
     // console.log("Received : ", line);
@@ -73,149 +81,59 @@ function loadGraph(fileName) {
   readline.on("close", () => {
     input = input.join("\n");
     grafo = JSON.parse(input);
-
-    console.log(grafo.arestas);
-
-    const adjMatrix = buildAdjMatrix(
-      grafo.vertices.length,
-      grafo.arestas.length,
-      grafo.arestas
-    );
-
-    const adjList = buildAdjList(grafo.vertices, grafo.arestas);
-
-    console.log(adjMatrix);
-
-    console.log(adjList);
-
-    graphMatrix = adjMatrix;
-    graphList = adjList;
-
-    let removedGraphMatrix = removeEdgeMatrix(adjMatrix, "1", "2");
-    let removedGraphList = removeEdgeList(adjList, "1", "2");
-
-    console.log(removedGraphMatrix);
-    console.log(removedGraphList);
-
-    console.log(addEdgeMatrix(adjMatrix, "1", "2"));
-    console.log(addEdgeList(adjList, "1", "2"));
+    graph = Graph(grafo);
   });
 }
 
-function buildAdjList(vertices, arestas) {
-  let adjList = {};
-
-  vertices.forEach(vertice => {
-    adjList[vertice] = [];
+function sleep(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
   });
-
-  arestas.forEach(aresta => {
-    adjList[aresta[0]].push(aresta[1]);
-    adjList[aresta[1]].push(aresta[0]);
-  });
-
-  return adjList;
 }
 
-function buildAdjMatrix(verticesLen, arestasLen, arestas) {
-  let adjMatrix = [];
+function operate(graph, option) {
+  let answer;
+  let vertice;
+  let vertice1;
+  let vertice2;
+  switch (option) {
+    case "1":
+      answer = rl.question(
+        "Quais arestas? (Ex.: 1 2 - adiciona aresta entre vertices 1 e 2)\n"
+      );
+      [vertice1, vertice2] = answer.split(" ");
+      graph.addEdgeMatrix(vertice1, vertice2);
+      graph.addEdgeList(vertice1, vertice2);
+      break;
+    case "2":
+      answer = rl.question(
+        "Quais arestas? (Ex.: 1 2 - remove aresta entre vertices 1 e 2)\n"
+      );
+      [vertice1, vertice2] = answer.split(" ");
+      graph.removeEdgeMatrix(vertice1, vertice2);
+      graph.removeEdgeList(vertice1, vertice2);
+      break;
+    case "3":
+      graph.addVerticeMatrix();
+      graph.addVerticeList();
+      console.log(`Vertice ${graph.len + 1} adicionado`);
+      break;
+    case "4":
+      answer = rl.question("Qual vertice? (Ex.: 3 - remove o vertice 3)\n");
 
-  for (let i = 0; i < verticesLen; i++) {
-    adjMatrix[i] = [];
-    for (let j = i + 1; j < verticesLen; j++) {
-      adjMatrix[i][j] = 0;
-    }
+      graph.removeVerticeMatrix(answer);
+      graph.removeVerticeList(answer);
+      break;
+    case "5":
+      graph.printRaw();
+      break;
+    case "6":
+      graph.prettyPrint();
+      break;
+    case "7":
+      return "end";
+    default:
+      return true;
   }
-
-  let ind1, ind2, aux;
-
-  for (let i = 0; i < arestasLen; i++) {
-    ind1 = arestas[i][0] - 1;
-    ind2 = arestas[i][1] - 1;
-
-    if (ind1 > ind2) {
-      aux = ind2;
-      ind2 = ind1;
-      ind1 = aux;
-    }
-    console.log(ind1, ind2);
-    adjMatrix[ind1][ind2] = 1;
-  }
-
-  return adjMatrix;
-}
-
-function printArestas(adjMatrix) {
-  for (let linha in adjMatrix) {
-    for (let coluna in adjMatrix[linha]) {
-      if (adjMatrix[linha][coluna] == 1) {
-        console.log(+linha + 1, +coluna + 1);
-      }
-    }
-  }
-}
-
-function removeEdgeMatrix(adjMatrix, vertice1, vertice2) {
-  let aux;
-  if (vertice1 > vertice2) {
-    aux = vertice1;
-    vertice1 = vertice2;
-    vertice2 = aux;
-  }
-
-  adjMatrix[vertice1 - 1][vertice2 - 1] = 0;
-
-  return adjMatrix;
-}
-
-function addEdgeMatrix(adjMatrix, vertice1, vertice2) {
-  let aux;
-  if (vertice1 > vertice2) {
-    aux = vertice1;
-    vertice1 = vertice2;
-    vertice2 = aux;
-  }
-
-  adjMatrix[vertice1 - 1][vertice2 - 1] = 1;
-
-  return adjMatrix;
-}
-
-function removeEdgeList(adjList, vertice1, vertice2) {
-  let aux;
-  if (vertice1 > vertice2) {
-    aux = vertice1;
-    vertice1 = vertice2;
-    vertice2 = aux;
-  }
-
-  if (adjList[vertice1]) {
-    adjList[vertice1].splice(adjList[vertice1].indexOf(vertice2), 1);
-    adjList[vertice2].splice(adjList[vertice2].indexOf(vertice1), 1);
-  }
-
-  return adjList;
-}
-
-function addEdgeList(adjList, vertice1, vertice2) {
-  let aux;
-  if (vertice1 > vertice2) {
-    aux = vertice1;
-    vertice1 = vertice2;
-    vertice2 = aux;
-  }
-
-  if (adjList[vertice1]) {
-    adjList[vertice1].push(vertice2);
-
-    if (adjList[vertice2]) {
-      adjList[vertice2].push(vertice1);
-    } else {
-      adjList[vertice2] = [vertice1];
-    }
-  } else {
-    adjList[vertice1] = [vertice2];
-  }
-
-  return adjList;
+  return true;
 }
