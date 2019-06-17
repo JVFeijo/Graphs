@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node readInput.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "godumb": "node --max-old-space-size=4096 readInput.js"
   },
   "keywords": [],
   "author": "",

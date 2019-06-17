@@ -15,14 +15,17 @@ async function program() {
 
 async function getGraph() {
   let answer = rl.question(
-    "Escolha o numero de vertices de seu grafo entre as opções:\n1. n = 3\n2. n = 7\n3. n = 10\n"
+    "Escolha o numero de vertices de seu grafo entre as opções:\n0. n = 0\n1. n = 3\n2. n = 7\n3. n = 10\n4. n = 200\n5. n = 1000\n"
+  );
+  let type = rl.question(
+    "Qual será o tipo do seu grafo?\n1. Lista de Adjacência\n2. Matrix de Adjacência\n"
   );
   let fileName = getFileName(answer);
   if (fileName === "badOption") {
     console.log("Tente novamente por favor.");
     return false;
   } else {
-    loadGraph(fileName);
+    loadGraph(fileName, type);
     await sleep(100);
     return true;
   }
@@ -30,7 +33,7 @@ async function getGraph() {
 
 function getOperation() {
   let answer = rl.question(
-    "Escolha uma das operações:\n1. Adicionar aresta\n2. Remover aresta\n3. Adicionar vertice\n4. Remover vertice\n5. Print\n6. pretty print\n7. Encerrar\n"
+    "Escolha uma das operações:\n1. Adicionar aresta\n2. Remover aresta\n3. Adicionar vertice\n4. Remover vertice\n5. Print\n6. pretty print\n7. Encerrar\n8. Depth first search\n9. Breadth first search\n10. Test connectivity\n11. Test cyclicity\n12. Test if is a forest\n13. Test if is a tree\n14. Get spanning forest\n15. Get distance\n"
   );
   let result = operate(graph, answer);
   if (result === "end") {
@@ -45,6 +48,9 @@ program();
 function getFileName(option) {
   let filename = "";
   switch (option) {
+    case "0":
+      filename = "graph0";
+      break;
     case "1":
       filename = "graph3";
       break;
@@ -55,7 +61,10 @@ function getFileName(option) {
       filename = "graph10";
       break;
     case "4":
-      filename = "kill";
+      filename = "graph200";
+      break;
+    case "5":
+      filename = "graph1000";
       break;
     default:
       filename = "badOption";
@@ -64,7 +73,7 @@ function getFileName(option) {
   return filename;
 }
 
-function loadGraph(fileName) {
+function loadGraph(fileName, type) {
   const readline = rlAsync.createInterface({
     input: fs.createReadStream(fileName),
     output: process.stdout,
@@ -81,7 +90,8 @@ function loadGraph(fileName) {
   readline.on("close", () => {
     input = input.join("\n");
     grafo = JSON.parse(input);
-    graph = Graph(grafo);
+    graph = Graph(grafo, type);
+    console.log(grafo.arestas.length);
   });
 }
 
@@ -96,33 +106,30 @@ function operate(graph, option) {
   let vertice;
   let vertice1;
   let vertice2;
+  let runtime;
   switch (option) {
     case "1":
       answer = rl.question(
         "Quais arestas? (Ex.: 1 2 - adiciona aresta entre vertices 1 e 2)\n"
       );
       [vertice1, vertice2] = answer.split(" ");
-      graph.addEdgeMatrix(vertice1, vertice2);
-      graph.addEdgeList(vertice1, vertice2);
+      graph.addEdge(vertice1, vertice2);
       break;
     case "2":
       answer = rl.question(
         "Quais arestas? (Ex.: 1 2 - remove aresta entre vertices 1 e 2)\n"
       );
       [vertice1, vertice2] = answer.split(" ");
-      graph.removeEdgeMatrix(vertice1, vertice2);
-      graph.removeEdgeList(vertice1, vertice2);
+      graph.removeEdge(vertice1, vertice2);
       break;
     case "3":
-      graph.addVerticeMatrix();
-      graph.addVerticeList();
-      console.log(`Vertice ${graph.len + 1} adicionado`);
+      graph.addVertice();
+      console.log(`\nVertice ${graph.len + 1} adicionado\n`);
       break;
     case "4":
       answer = rl.question("Qual vertice? (Ex.: 3 - remove o vertice 3)\n");
-
-      graph.removeVerticeMatrix(answer);
-      graph.removeVerticeList(answer);
+      graph.removeVertice(answer);
+      console.log(`\nVertice ${answer} removido\n`);
       break;
     case "5":
       graph.printRaw();
@@ -132,6 +139,52 @@ function operate(graph, option) {
       break;
     case "7":
       return "end";
+    case "8":
+      runtime = graph.completeDfs();
+      console.log(`\nRuntime: ${runtime}\n`);
+      return true;
+    case "9":
+      runtime = graph.completeBfs();
+      console.log(`\nRuntime: ${runtime}\n`);
+      return true;
+    case "10":
+      let isConnected = graph.isConnected();
+      if (isConnected) {
+        console.log("\nGraph is connected\n");
+      } else {
+        console.log("\nGraph is not connected\n");
+      }
+      return true;
+    case "11":
+      let hasCycle = graph.hasCycle();
+      if (hasCycle) console.log("\nGraph is circular\n");
+      else console.log("\nGraph is not circular\n");
+      return true;
+    case "12":
+      let isForest = graph.isForest();
+      if (isForest) console.log("\nGraph is a forest\n");
+      else console.log("\nGraph is not a forest\n");
+      return true;
+    case "13":
+      let isTree = graph.isTree();
+      if (isTree) console.log(`\nGraph is a tree\n`);
+      else console.log(`\nGraph is not a tree\n`);
+      return true;
+    case "14":
+      let spanningForest = graph.getSpanningForest();
+      let jsonSpanningForest = JSON.stringify(spanningForest);
+      fs.writeFileSync(`graphSpanningForest${graph.len}`, jsonSpanningForest);
+      console.log(`\nSpanningForestGraph file generated successfully\n`);
+      console.log(spanningForest);
+      console.log();
+      return true;
+    case "15":
+      let distanceVertices = graph.getDistance();
+      console.log(`\nDistance from root(vertice 1):\n`);
+      distanceVertices.forEach((dist, index, arr) => {
+        console.log(`vertice ${index + 1}: ${dist}\n`);
+      });
+      return true;
     default:
       return true;
   }
