@@ -14,18 +14,25 @@ async function program() {
 }
 
 async function getGraph() {
-  let answer = rl.question(
-    "Escolha o numero de vertices de seu grafo entre as opções:\n0. n = 0\n1. n = 3\n2. n = 7\n3. n = 10\n4. n = 200\n5. n = 1000\n"
-  );
   let type = rl.question(
-    "Qual será o tipo do seu grafo?\n1. Lista de Adjacência\n2. Matrix de Adjacência\n"
+    "Qual será o tipo do seu grafo?\n1. Lista de Adjacência\n2. Matrix de Adjacência\n3. Grafo com peso\n"
   );
-  let fileName = getFileName(answer);
-  if (fileName === "badOption") {
-    console.log("Tente novamente por favor.");
-    return false;
+  if (type != "3") {
+    let answer = rl.question(
+      "Escolha o numero de vertices de seu grafo entre as opções:\n0. n = 0\n1. n = 3\n2. n = 7\n3. n = 10\n4. n = 200\n5. n = 1000\n"
+    );
+    let fileName = getFileName(answer);
+    if (fileName === "badOption") {
+      console.log("Tente novamente por favor.");
+      return false;
+    } else {
+      loadGraph(fileName, type, false);
+      await sleep(100);
+      return true;
+    }
   } else {
-    loadGraph(fileName, type);
+    let fileName = getFileName("6");
+    loadGraph(fileName, 2, true);
     await sleep(100);
     return true;
   }
@@ -65,6 +72,9 @@ function getFileName(option) {
       break;
     case "5":
       filename = "graph1000";
+      break;
+    case "6":
+      filename = "graphweigth7";
       break;
     default:
       filename = "badOption";

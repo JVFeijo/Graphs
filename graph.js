@@ -1,23 +1,33 @@
-module.exports = function(grafo, type) {
+module.exports = function(grafo, type, weigth) {
   let graph;
-
-  if (type == 1) {
-    graph = buildAdjList(grafo.vertices, grafo.arestas);
-  } else if (type == 2) {
-    graph = buildAdjMatrix(
-      grafo.vertices.length,
-      grafo.arestas.length,
-      grafo.arestas
-    );
-  }
-
   let visitedVertices;
   let discoveredEdges;
   let exploredEdges;
+  let shortestPathArr;
+  let distanceMatrix;
+  let shortestDistanceFromStart;
 
   const vertices = grafo.vertices;
   const arestas = grafo.arestas;
   const len = vertices.length;
+
+  if (weigth) {
+    [graph, distanceMatrix] = buildWeigthMatrix(
+      grafo.vertices.length,
+      grafo.arestas.length,
+      grafo.arestas
+    );
+  } else {
+    if (type == 1) {
+      graph = buildAdjList(grafo.vertices, grafo.arestas);
+    } else if (type == 2) {
+      graph = buildAdjMatrix(
+        grafo.vertices.length,
+        grafo.arestas.length,
+        grafo.arestas
+      );
+    }
+  }
 
   function completeBfsList() {
     visitedVertices = labelVertices(len);
@@ -274,21 +284,21 @@ module.exports = function(grafo, type) {
   }
 
   function labelVertices(len) {
-    let visitedVertices = new Array(len);
+    let verticesArray = new Array(len);
 
-    return visitedVertices;
+    return verticesArray;
   }
 
   function labelEdges(len) {
-    let discoveredEdges = [];
-    let exploredEdges = [];
+    let edgesArr1 = [];
+    let edgesArr2 = [];
 
     for (let i = 0; i < len; i++) {
-      discoveredEdges.push([]);
-      exploredEdges.push([]);
+      edgesArr1.push([]);
+      edgesArr2.push([]);
     }
 
-    return [discoveredEdges, exploredEdges];
+    return [edgesArr1, edgesArr2];
   }
 
   function buildAdjList(vertices, arestas) {
@@ -332,6 +342,39 @@ module.exports = function(grafo, type) {
     }
 
     return graph;
+  }
+
+  function buildWeightMatrix(arestas) {
+    let [, distanceMatrix] = labelEdges(len);
+
+    let graph = [];
+
+    for (let i = 0; i < verticesLen; i++) {
+      graph[i] = [];
+      for (let j = 0; j < verticesLen; j++) {
+        graph[i][j] = 0;
+      }
+    }
+
+    let ind1, ind2, aux;
+
+    for (let i = 0; i < arestasLen; i++) {
+      ind1 = arestas[i][0] - 1;
+      ind2 = arestas[i][1] - 1;
+      distance = arestas[i][2];
+
+      if (ind1 > ind2) {
+        aux = ind2;
+        ind2 = ind1;
+        ind1 = aux;
+      }
+      graph[ind1][ind2] = 1;
+      graph[ind2][ind1] = 1;
+      distanceMatrix[ind1][ind2] = distance;
+      distanceMatrix[ind2][ind1] = distance;
+    }
+
+    return [graph, distanceMatrix];
   }
 
   function removeEdgeMatrix(vertice1, vertice2) {
@@ -613,6 +656,55 @@ module.exports = function(grafo, type) {
     return distanceVertices;
   }
 
+  function shortestPath() {
+    var v;
+    var possiblyNewDistance;
+
+    const visitedVertices = labelVertices(len);
+
+    shortestDistanceFromStart = labelVertices(len);
+    shortestPathArr = labelVertices(len);
+    shortestDistanceFromStart[0] = 0;
+
+    for (let i = 0; vertices.length; i++) {
+      v = getClosestToStartUnvisitedNeigh(
+        shortestDistanceFromStart,
+        visitedVertices
+      );
+      visitedVertices[v] = true;
+
+      for (let j = 0; graph[v].length; j++) {
+        if (graph[v][j] == 1) {
+          if (!visitedVertices[j]) {
+            possiblyNewDistance =
+              distanceMatrix[v][j] + shortestDistanceFromStart[v];
+            if (
+              !shortestDistanceFromStart[j] ||
+              shortestDistanceFromStart[j] > possiblyNewDistance
+            ) {
+              shortestDistanceFromStart[j] = possiblyNewDistance;
+              shortestPathArr[j] = v;
+            }
+          }
+        }
+      }
+    }
+
+    function getClosestToStartUnvisitedNeigh(distanceArr, visitedArr) {
+      let closestToStartUnvisitedNeigh;
+      let closestDistance = Infinity;
+
+      distanceArr.forEach((distance, vertice, arr) => {
+        if (distance < closestDistance && !visitedArr[vertice]) {
+          closestDistance = distance;
+          closestToStartUnvisitedNeigh = vertice;
+        }
+      });
+
+      return closestToStartUnvisitedNeigh;
+    }
+  }
+
   function printRaw() {
     console.log(graph);
   }
@@ -626,8 +718,9 @@ module.exports = function(grafo, type) {
     console.log(prettyGraph);
   }
 
+  var library;
   if (type == 1) {
-    return {
+    library = {
       removeEdge: removeEdgeList,
       addEdge: addEdgeList,
       removeVertice: removeVerticeList,
@@ -647,7 +740,7 @@ module.exports = function(grafo, type) {
       vertices
     };
   } else if (type == 2) {
-    return {
+    library = {
       removeEdge: removeEdgeMatrix,
       addEdge: addEdgeMatrix,
       removeVertice: removeVerticeMatrix,
@@ -667,4 +760,6 @@ module.exports = function(grafo, type) {
       vertices
     };
   }
+
+  return library;
 };
