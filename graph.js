@@ -690,12 +690,12 @@ module.exports = function(grafo, type, weigth) {
       }
     }
 
-    function getClosestToStartUnvisitedNeigh(distanceArr, visitedArr) {
+    function getClosestToStartUnvisitedNeigh(distanceArray, visitedArray) {
       let closestToStartUnvisitedNeigh;
       let closestDistance = Infinity;
 
-      distanceArr.forEach((distance, vertice, arr) => {
-        if (distance < closestDistance && !visitedArr[vertice]) {
+      distanceArray.forEach((distance, vertice, arr) => {
+        if (distance < closestDistance && !visitedArray[vertice]) {
           closestDistance = distance;
           closestToStartUnvisitedNeigh = vertice;
         }
@@ -710,6 +710,16 @@ module.exports = function(grafo, type, weigth) {
   }
 
   function prettyPrint() {
+    if (type == 1) {
+      const arestas = [];
+      const aresta = [];
+
+      for (let vertice in graph) {
+        graph[vertice].forEach(neigh => {
+          arestas.push([vertice, neigh]);
+        });
+      }
+    }
     let prettyGraph = {
       nome: `GRAFO_ALEATORIO_N_${len}`,
       vertices,
@@ -760,6 +770,8 @@ module.exports = function(grafo, type, weigth) {
       vertices
     };
   }
-
+  if (weigth) {
+    library.shortestPath = shortestPath;
+  }
   return library;
 };
