@@ -11,8 +11,8 @@ module.exports = function(grafo, type, weigth) {
   const arestas = grafo.arestas;
   const len = vertices.length;
 
-  if (weigth) {
-    [graph, distanceMatrix] = buildWeigthMatrix(
+  if (weigth == true) {
+    [graph, distanceMatrix] = buildMatrixWeigth(
       grafo.vertices.length,
       grafo.arestas.length,
       grafo.arestas
@@ -344,7 +344,7 @@ module.exports = function(grafo, type, weigth) {
     return graph;
   }
 
-  function buildWeightMatrix(arestas) {
+  function buildMatrixWeigth(verticesLen, arestasLen, arestas) {
     let [, distanceMatrix] = labelEdges(len);
 
     let graph = [];
@@ -657,6 +657,7 @@ module.exports = function(grafo, type, weigth) {
   }
 
   function shortestPath() {
+    let start = new Date();
     var v;
     var possiblyNewDistance;
 
@@ -665,25 +666,41 @@ module.exports = function(grafo, type, weigth) {
     shortestDistanceFromStart = labelVertices(len);
     shortestPathArr = labelVertices(len);
     shortestDistanceFromStart[0] = 0;
+    shortestPathArr[0] = 0;
 
-    for (let i = 0; vertices.length; i++) {
+    console.log(distanceMatrix);
+    console.log(vertices);
+    for (let i = 0; i < vertices.length; i++) {
       v = getClosestToStartUnvisitedNeigh(
         shortestDistanceFromStart,
         visitedVertices
       );
+
       visitedVertices[v] = true;
 
-      for (let j = 0; graph[v].length; j++) {
+      for (let j = 0; j < graph[v].length; j++) {
         if (graph[v][j] == 1) {
           if (!visitedVertices[j]) {
+            console.log(`vertice: ${v} neigh: ${j}`);
+            console.log(`their distance: ${distanceMatrix[v][j]}`);
+            console.log(
+              `distance of ${v} from start: ${shortestDistanceFromStart[v]}`
+            );
             possiblyNewDistance =
-              distanceMatrix[v][j] + shortestDistanceFromStart[v];
+              +distanceMatrix[v][j] + +shortestDistanceFromStart[v];
+            console.log(
+              `possibly new distance for neigh would be: ${possiblyNewDistance} and current distance: ${
+                shortestDistanceFromStart[j]
+              }`
+            );
             if (
               !shortestDistanceFromStart[j] ||
               shortestDistanceFromStart[j] > possiblyNewDistance
             ) {
               shortestDistanceFromStart[j] = possiblyNewDistance;
-              shortestPathArr[j] = v;
+              shortestPathArr[j] = v + 1;
+              console.log("updated shortestPathArr");
+              console.log(shortestPathArr);
             }
           }
         }
@@ -703,6 +720,9 @@ module.exports = function(grafo, type, weigth) {
 
       return closestToStartUnvisitedNeigh;
     }
+
+    console.log(new Date() - start);
+    return shortestPathArr;
   }
 
   function printRaw() {
@@ -710,14 +730,26 @@ module.exports = function(grafo, type, weigth) {
   }
 
   function prettyPrint() {
-    if (type == 1) {
-      const arestas = [];
-      const aresta = [];
+    const vertices = [];
+    const arestas = [];
 
+    if (type == 1) {
       for (let vertice in graph) {
+        vertices.push(vertice);
         graph[vertice].forEach(neigh => {
-          arestas.push([vertice, neigh]);
+          if (neigh > vertice) {
+            arestas.push([vertice, neigh]);
+          }
         });
+      }
+    } else if (type == 2) {
+      for (let i = 0; i < graph.length; i++) {
+        vertices.push(String(i + 1));
+        for (let j = i + 1; j < graph[i].length; j++) {
+          if (graph[i][j] == 1) {
+            arestas.push([String(i + 1), String(j + 1)]);
+          }
+        }
       }
     }
     let prettyGraph = {
@@ -745,6 +777,7 @@ module.exports = function(grafo, type, weigth) {
       isTree,
       getSpanningForest,
       getDistance,
+      shortestPath,
       len,
       arestas,
       vertices
@@ -765,13 +798,11 @@ module.exports = function(grafo, type, weigth) {
       isTree,
       getSpanningForest,
       getDistance,
+      shortestPath,
       len,
       arestas,
       vertices
     };
-  }
-  if (weigth) {
-    library.shortestPath = shortestPath;
   }
   return library;
 };

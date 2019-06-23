@@ -5,6 +5,7 @@ const Graph = require("./graph");
 
 let grafo;
 let graph;
+let weigth;
 
 async function program() {
   let continuar = await getGraph();
@@ -31,6 +32,7 @@ async function getGraph() {
       return true;
     }
   } else {
+    weigth = true;
     let fileName = getFileName("6");
     loadGraph(fileName, 2, true);
     await sleep(100);
@@ -39,9 +41,12 @@ async function getGraph() {
 }
 
 function getOperation() {
-  let answer = rl.question(
-    "Escolha uma das operações:\n1. Adicionar aresta\n2. Remover aresta\n3. Adicionar vertice\n4. Remover vertice\n5. Print\n6. pretty print\n7. Encerrar\n8. Depth first search\n9. Breadth first search\n10. Test connectivity\n11. Test cyclicity\n12. Test if is a forest\n13. Test if is a tree\n14. Get spanning forest\n15. Get distance\n"
-  );
+  let question =
+    "Escolha uma das operações:\n1. Adicionar aresta\n2. Remover aresta\n3. Adicionar vertice\n4. Remover vertice\n5. Print\n6. pretty print\n7. Encerrar\n8. Depth first search\n9. Breadth first search\n10. Test connectivity\n11. Test cyclicity\n12. Test if is a forest\n13. Test if is a tree\n14. Get spanning forest\n15. Get distance\n";
+  if (weigth) {
+    question = question + "16. Find shortest path\n";
+  }
+  let answer = rl.question(question);
   let result = operate(graph, answer);
   if (result === "end") {
     return false;
@@ -83,7 +88,7 @@ function getFileName(option) {
   return filename;
 }
 
-function loadGraph(fileName, type) {
+function loadGraph(fileName, type, weigth) {
   const readline = rlAsync.createInterface({
     input: fs.createReadStream(fileName),
     output: process.stdout,
@@ -100,7 +105,7 @@ function loadGraph(fileName, type) {
   readline.on("close", () => {
     input = input.join("\n");
     grafo = JSON.parse(input);
-    graph = Graph(grafo, type);
+    graph = Graph(grafo, type, weigth);
     console.log(grafo.arestas.length);
   });
 }
@@ -194,6 +199,9 @@ function operate(graph, option) {
       distanceVertices.forEach((dist, index, arr) => {
         console.log(`vertice ${index + 1}: ${dist}\n`);
       });
+      return true;
+    case "16":
+      let shortestPath = graph.shortestPath();
       return true;
     default:
       return true;
