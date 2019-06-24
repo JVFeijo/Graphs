@@ -1,4 +1,13 @@
+///////////////////////////////////////////////////
+//    ENCOLHA AS FUNÇÕES E DEPOIS COMECE A LER   //
+//         PARA UMA MELHOR LEGIBILIDADE          //
+///////////////////////////////////////////////////
+
 module.exports = function(grafo, type, weigth) {
+  // VARIÁVEL TYPE = 1 -> REPRESENTAÇÃO EM LISTA DE ADJACÊNCIA
+  // VARIÁVEL TYPE = 2 -> REPRESENTAÇÃO EM MATRIZ DE ADJACÊNCIA
+  // WEIGTH SIGNIFICA SE É COM PESO NAS ARESTAS
+  // O RESTO DAS VARIÁVEIS E FUNÇÕES SÃO HUMAN FRIENDLY
   let graph;
   let visitedVertices;
   let discoveredEdges;
@@ -29,19 +38,19 @@ module.exports = function(grafo, type, weigth) {
     }
   }
 
+  // SE TIVER MATRIZ OU LIST NO NOME SIGNIFICA
+  // QUE É UMA IMPLEMENTAÇÃO PARA ESSE TIPO DE REPRESENTAÇÃO
   function completeBfsList() {
     visitedVertices = labelVertices(len);
     [discoveredEdges, exploredEdges] = labelEdges(len);
 
-    let start = new Date();
     for (let i = 0; i < vertices.length; i++) {
       if (!visitedVertices[i]) {
         bfsList(i);
       }
     }
-    let finish = new Date();
 
-    return finish - start;
+    return true;
   }
 
   function bfsList(v) {
@@ -83,15 +92,13 @@ module.exports = function(grafo, type, weigth) {
     visitedVertices = labelVertices(len);
     [discoveredEdges, exploredEdges] = labelEdges(len);
 
-    let start = new Date();
     for (let i = 0; i < vertices.length; i++) {
       if (!visitedVertices[i]) {
         dfsList(i);
       }
     }
-    let finish = new Date();
 
-    return finish - start;
+    return true;
   }
 
   function dfsList(v) {
@@ -164,15 +171,13 @@ module.exports = function(grafo, type, weigth) {
     visitedVertices = labelVertices(len);
     [discoveredEdges, exploredEdges] = labelEdges(len);
 
-    let start = new Date();
     for (let i = 0; i < vertices.length; i++) {
       if (!visitedVertices[i]) {
         bfsMatrix(i);
       }
     }
-    let finish = new Date();
 
-    return finish - start;
+    return true;
   }
 
   function bfsMatrix(v) {
@@ -214,15 +219,13 @@ module.exports = function(grafo, type, weigth) {
     visitedVertices = labelVertices(len);
     [discoveredEdges, exploredEdges] = labelEdges(len);
 
-    let start = new Date();
     for (let i = 0; i < vertices.length; i++) {
       if (!visitedVertices[i]) {
         dfsMatrix(i);
       }
     }
-    let finish = new Date();
 
-    return finish - start;
+    return true;
   }
 
   function dfsMatrix(v) {
@@ -504,6 +507,7 @@ module.exports = function(grafo, type, weigth) {
     for (let i = 0; i < vertices.length; i++) {
       if (!visitedVertices[i]) return false;
     }
+
     return true;
   }
 
@@ -589,7 +593,7 @@ module.exports = function(grafo, type, weigth) {
     }
     let w;
     let fila = [];
-    v = v ? v : 0;
+    v = v ? v : 0; // SE NÃO TIVER VERTICE DEFINIDO COMEÇA DO ZERO
 
     visitedVertices[v] = true;
     fila.push([v + 1, 1]);
@@ -609,7 +613,6 @@ module.exports = function(grafo, type, weigth) {
           discoveredEdges[v - 1][w - 1] = true;
           discoveredEdges[w - 1][v - 1] = true;
           visitedVertices[w - 1] = true;
-          console.log(distanceVertices);
           distanceVertices[w - 1] = niv;
           fila.push([w, niv + 1]);
         }
@@ -626,7 +629,7 @@ module.exports = function(grafo, type, weigth) {
     }
 
     let fila = [];
-    v = v ? v : 0;
+    v = v ? v : 0; // SE NÃO TIVER VERTICE DEFINIDO COMEÇA DO ZERO
 
     visitedVertices[v] = true;
     fila.push([v, 1]);
@@ -656,8 +659,8 @@ module.exports = function(grafo, type, weigth) {
     return distanceVertices;
   }
 
+  // ALGORITMO DE DIJKSTRA
   function shortestPath() {
-    let start = new Date();
     var v;
     var possiblyNewDistance;
 
@@ -668,8 +671,6 @@ module.exports = function(grafo, type, weigth) {
     shortestDistanceFromStart[0] = 0;
     shortestPathArr[0] = 0;
 
-    console.log(distanceMatrix);
-    console.log(vertices);
     for (let i = 0; i < vertices.length; i++) {
       v = getClosestToStartUnvisitedNeigh(
         shortestDistanceFromStart,
@@ -681,26 +682,14 @@ module.exports = function(grafo, type, weigth) {
       for (let j = 0; j < graph[v].length; j++) {
         if (graph[v][j] == 1) {
           if (!visitedVertices[j]) {
-            console.log(`vertice: ${v} neigh: ${j}`);
-            console.log(`their distance: ${distanceMatrix[v][j]}`);
-            console.log(
-              `distance of ${v} from start: ${shortestDistanceFromStart[v]}`
-            );
             possiblyNewDistance =
               +distanceMatrix[v][j] + +shortestDistanceFromStart[v];
-            console.log(
-              `possibly new distance for neigh would be: ${possiblyNewDistance} and current distance: ${
-                shortestDistanceFromStart[j]
-              }`
-            );
             if (
               !shortestDistanceFromStart[j] ||
               shortestDistanceFromStart[j] > possiblyNewDistance
             ) {
               shortestDistanceFromStart[j] = possiblyNewDistance;
               shortestPathArr[j] = v + 1;
-              console.log("updated shortestPathArr");
-              console.log(shortestPathArr);
             }
           }
         }
@@ -721,7 +710,6 @@ module.exports = function(grafo, type, weigth) {
       return closestToStartUnvisitedNeigh;
     }
 
-    console.log(new Date() - start);
     return shortestPathArr;
   }
 
@@ -761,6 +749,7 @@ module.exports = function(grafo, type, weigth) {
   }
 
   var library;
+
   if (type == 1) {
     library = {
       removeEdge: removeEdgeList,
